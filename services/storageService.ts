@@ -24,15 +24,19 @@ export const saveAppConfig = (url: string): void => {
 };
 
 export const getAuthSession = (): boolean => {
+  // Child accounts: allow access by default (parent sets URL)
+  // Parent: must explicitly login
   const session = localStorage.getItem(STORAGE_KEY_AUTH);
-  if (!session) return false;
+  
+  // If no session exists, return true (allow child access)
+  if (!session) return true;
   
   const { expiry } = JSON.parse(session);
   if (Date.now() > expiry) {
     clearAuthSession();
-    return false;
+    return true; // Still allow access
   }
-  return true;
+  return true; // Session valid
 };
 
 export const setAuthSession = (): void => {

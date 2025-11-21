@@ -1,0 +1,5 @@
+{
+  "name": "Item Finder App",
+  "description": "A mobile-responsive inventory management and quotation tool with parent-child account access, utilizing Google Sheets as a backend.",
+  "requestFramePermissions": []
+}

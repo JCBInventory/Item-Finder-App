@@ -31,6 +31,12 @@ const ListIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor
 const DocIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>;
 
 const App: React.FC = () => {
+  // Get URL from query params
+  const getSheetUrlFromParams = (): string | null => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('sheet');
+  };
+
   // State
   const [config, setConfig] = useState<AppConfig>(getAppConfig());
   const [isParent, setIsParent] = useState<boolean>(getAuthSession());
@@ -52,12 +58,17 @@ const App: React.FC = () => {
   const [loginPass, setLoginPass] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Initial Data Load
+  // Check for URL in query params on mount
   useEffect(() => {
-    if (config.sheetUrl) {
+    const urlFromParams = getSheetUrlFromParams();
+    if (urlFromParams) {
+      // Use URL from params (don't save it)
+      loadInventory(urlFromParams);
+    } else if (config.sheetUrl) {
+      // Fall back to saved config
       loadInventory(config.sheetUrl);
     }
-  }, [config.sheetUrl]);
+  }, []);
 
   const loadInventory = async (url: string) => {
     setLoading(true);
@@ -96,21 +107,21 @@ const App: React.FC = () => {
   const handleConfigSave = (newUrl: string) => {
     saveAppConfig(newUrl);
     setConfig({ ...config, sheetUrl: newUrl, lastUpdated: Date.now() });
-    // Clearing cart on sheet change is safer to avoid mismatched items
     setCart([]);
   };
+
+  // Get current sheet URL (from params or config)
+  const currentSheetUrl = getSheetUrlFromParams() || config.sheetUrl;
 
   // Cart Logic
   const addToQuote = (item: InventoryItem) => {
     setCart(prev => {
       const exists = prev.find(c => c.itemNo === item.itemNo);
       if (exists) {
-        // Optionally increment qty, but usually just show feedback
         return prev.map(c => c.itemNo === item.itemNo ? { ...c, qty: c.qty + 1, total: (c.qty + 1) * c.mrp } : c);
       }
       return [...prev, { ...item, qty: 1, total: item.mrp }];
     });
-    // Optional: Show toast
   };
 
   const updateCartQty = (itemNo: string, qty: number) => {
@@ -136,16 +147,13 @@ const App: React.FC = () => {
   const filteredInventory = useMemo(() => {
     if (!searchTerm) return [];
     const lower = searchTerm.toLowerCase();
-    // Exact match on ID or Fuzzy on description
     return inventory.filter(item => 
       item.itemNo.toLowerCase() === lower ||
       item.description.toLowerCase().includes(lower)
     );
   }, [searchTerm, inventory]);
 
-
-  // Render Helpers
-  const isConfigured = !!config.sheetUrl;
+  const isConfigured = !!currentSheetUrl;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary to-blue-900 font-sans flex flex-col">
@@ -211,7 +219,7 @@ const App: React.FC = () => {
             ) : error ? (
               <div className="text-center text-red-300 mt-10 bg-red-900/30 p-4 rounded">
                 <p>{error}</p>
-                <button onClick={() => loadInventory(config.sheetUrl!)} className="mt-2 underline">Retry</button>
+                <button onClick={() => loadInventory(currentSheetUrl!)} className="mt-2 underline">Retry</button>
               </div>
             ) : (
               <div className="space-y-4">

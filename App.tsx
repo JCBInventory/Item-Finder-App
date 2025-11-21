@@ -37,12 +37,11 @@ const App: React.FC = () => {
     return params.get('sheet');
   };
 
-  // Check if URL is in params (public sharing)
-  const hasPublicUrl = !!getSheetUrlFromParams();
-
   // State
   const [config, setConfig] = useState<AppConfig>(getAppConfig());
-  const [isParent, setIsParent] = useState<boolean>(hasPublicUrl ? false : getAuthSession());
+  // By default, users are not parent (child view)
+  // Only parent can login to change settings
+  const [isParent, setIsParent] = useState<boolean>(false);
   const [view, setView] = useState<ViewState>(ViewState.INVENTORY);
   
   const [inventory, setInventory] = useState<InventoryItem[]>([]);

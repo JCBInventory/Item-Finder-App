@@ -37,9 +37,12 @@ const App: React.FC = () => {
     return params.get('sheet');
   };
 
+  // Check if URL is in params (public sharing)
+  const hasPublicUrl = !!getSheetUrlFromParams();
+
   // State
   const [config, setConfig] = useState<AppConfig>(getAppConfig());
-  const [isParent, setIsParent] = useState<boolean>(getAuthSession());
+  const [isParent, setIsParent] = useState<boolean>(hasPublicUrl ? false : getAuthSession());
   const [view, setView] = useState<ViewState>(ViewState.INVENTORY);
   
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -196,7 +199,7 @@ const App: React.FC = () => {
                 <input
                   type="text"
                   disabled={!isConfigured}
-                  placeholder={isConfigured ? "Search Item No or Description..." : "Waiting for parent configuration..."}
+                  placeholder={isConfigured ? "Search Item No or Description..." : "Waiting for configuration..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-4 bg-transparent placeholder-gray-700/60 text-primary font-semibold outline-none disabled:cursor-not-allowed"
